@@ -86,9 +86,9 @@ public class Launcher
 	
 	
 	
-	public static JLabel folderMessage;
+	public static JLabel loadMessage;
 	
-	public static JLabel imageMessage;
+	public static JLabel logicMessage;
 	
 	public static JLabel saveMessage;
 	
@@ -179,9 +179,9 @@ public class Launcher
 		
 		
 		
-		folderMessage = GUI.addLabel(container, GUI.createConstraints(0, 17, 0, 10, 8, 1), "");
+		loadMessage = GUI.addLabel(container, GUI.createConstraints(0, 17, 0, 10, 8, 1), "");
 		
-		imageMessage = GUI.addLabel(container, GUI.createConstraints(0, 18, 0, 10, 8, 1), "");
+		logicMessage = GUI.addLabel(container, GUI.createConstraints(0, 18, 0, 10, 8, 1), "");
 		
 		saveMessage = GUI.addLabel(container, GUI.createConstraints(0, 19, 0, 10, 8, 1), "");
 		
@@ -263,17 +263,17 @@ public class Launcher
 			
 			button.setEnabled(false);
 			
-			folderMessage.setText("");
+			loadMessage.setText("");
 			
-			imageMessage.setText("");
+			logicMessage.setText("");
 			
 			saveMessage.setText("");
 			
 			saveNameMessage.setText("");
 			
-			folderMessage.setForeground(Color.black);
+			loadMessage.setForeground(Color.black);
 			
-			imageMessage.setForeground(Color.black);
+			logicMessage.setForeground(Color.black);
 			
 			saveMessage.setForeground(Color.black);
 			

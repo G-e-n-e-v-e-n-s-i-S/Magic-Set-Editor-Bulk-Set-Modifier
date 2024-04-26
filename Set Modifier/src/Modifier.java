@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -825,7 +824,7 @@ public class Modifier
 			}
 		}
 		
-		if (defaultMap.get("	stylesheet:").equals("")) log("Could not find default Set template.", Color.red, "folder");
+		if (defaultMap.get("	stylesheet:").equals("")) log("Could not find default Set template.", Color.red, "load");
 		
 		
 		
@@ -982,7 +981,7 @@ public class Modifier
 		
 		String cardModifiedCountString = cardModifiedCount + " card" + (cardModifiedCount != 1 ? "s" : "") + (mustDelete ? " deleted." : " modified.");
 		
-		log(cardCountString + cardModifiedCountString, Color.black, "image");
+		log(cardCountString + cardModifiedCountString, Color.black, "logic");
 		
 		
 		
@@ -1140,7 +1139,7 @@ public class Modifier
 	//		if (!setFile.get(row-1).startsWith("card:"))
 	//		{
 	//			
-	//			log("Error while deleting card.", Color.red, "image");
+	//			log("Error while deleting card.", Color.red, "logic");
 	//			
 	//		}
 	//		
@@ -1188,7 +1187,7 @@ public class Modifier
 			if (!zipFile.exists())
 			{
 				
-				log("No Set file found at specified path.", Color.red, "folder");
+				log("No Set file found at specified path.", Color.red, "load");
 				
 				return false;
 				
@@ -1203,18 +1202,18 @@ public class Modifier
 				
 				Path setPath = fileSystem.getPath("/set");
 				
-				setLines = new LinkedList<String>(Files.readAllLines(setPath, StandardCharsets.UTF_8));
+				setLines = Files.readAllLines(setPath, StandardCharsets.UTF_8);
 				
 			}
 			
-			log("Set file loaded.", Color.black, "folder");
+			log("Set file loaded.", Color.black, "load");
 			
 		}
 		
 		catch (Exception e)
 		{
 			
-			log("Cannot parse contents of Set file.", Color.red, "folder");
+			log("Cannot parse contents of Set file.", Color.red, "load");
 			
 			return false;
 			
@@ -1222,28 +1221,24 @@ public class Modifier
 		
 		
 		
-		while (setLines.size() > 0)
+		int setLinesCount = setLines.size();
+		
+		for (int i = 0; i < setLinesCount;)
 		{
 			
-			String line = setLines.get(0);
-			
-			if (line.equals("card:"))
+			if (setLines.get(i).equals("card:"))
 			{
 				
 				List<String> card = new ArrayList<String>();
 				
-				card.add(line);
-				
-				setLines.remove(0);
-				
-				while(setLines.size() > 0 && line.startsWith("	"))
+				do
 				{
 					
-					card.add(line);
+					card.add(setLines.get(i));
 					
-					setLines.remove(0);
+					i++;
 					
-				}
+				} while(i < setLinesCount && setLines.get(i).startsWith("	"));
 				
 				cards.add(card);
 				
@@ -1252,18 +1247,14 @@ public class Modifier
 			else
 			{
 				
-				headers.add(line);
-				
-				setLines.remove(0);
-				
-				while(setLines.size() > 0 && line.startsWith("	"))
+				do
 				{
 					
-					headers.add(line);
+					headers.add(setLines.get(i));
 					
-					setLines.remove(0);
+					i++;
 					
-				}
+				} while(i < setLinesCount && setLines.get(i).startsWith("	"));
 			}
 		}
 		
@@ -1355,7 +1346,7 @@ public class Modifier
 		catch (Exception e)
 		{
 			
-			log("Could not parse ' " + text + " ' as a number.", Color.red, "image");
+			log("Could not parse ' " + text + " ' as a number.", Color.red, "logic");
 			
 			return null;
 			
@@ -1390,25 +1381,25 @@ public class Modifier
 				
 			}
 			
-			if (out.equals("folder"))
+			if (out.equals("load"))
 			{
 				
-				if (!color.equals(Color.red) && Launcher.folderMessage.getForeground().equals(Color.red)) return;
+				if (!color.equals(Color.red) && Launcher.loadMessage.getForeground().equals(Color.red)) return;
 				
-				Launcher.folderMessage.setText(text);
+				Launcher.loadMessage.setText(text);
 				
-				Launcher.folderMessage.setForeground(color);
+				Launcher.loadMessage.setForeground(color);
 				
 			}
 			
-			else if (out.equals("image"))
+			else if (out.equals("logic"))
 			{
 				
-				if (!color.equals(Color.red) && Launcher.imageMessage.getForeground().equals(Color.red)) return;
+				if (!color.equals(Color.red) && Launcher.logicMessage.getForeground().equals(Color.red)) return;
 				
-				Launcher.imageMessage.setText(text);
+				Launcher.logicMessage.setText(text);
 				
-				Launcher.imageMessage.setForeground(color);
+				Launcher.logicMessage.setForeground(color);
 				
 			}
 			
