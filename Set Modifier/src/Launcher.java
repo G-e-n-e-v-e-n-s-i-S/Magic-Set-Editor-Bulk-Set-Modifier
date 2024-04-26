@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 
 
 
-public class StartClass
+public class Launcher
 {
 	
 	
