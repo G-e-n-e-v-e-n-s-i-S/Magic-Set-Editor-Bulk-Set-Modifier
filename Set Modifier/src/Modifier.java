@@ -12,8 +12,9 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.SwingWorker;
 
@@ -31,6 +32,32 @@ public class Modifier
 	public static List<String> headers = new ArrayList<String>();
 	
 	public static List<List<String>> cards = new ArrayList<List<String>>();
+	
+	
+
+	public static List<String> currentCard;
+	
+	public static int currentCardIndex;
+	
+	
+	
+	public static String currentConditionKey;
+	
+	public static BooleanSupplier currentConditionOperation;
+	
+	public static String currentConditionValue;
+	
+	public static String currentConditionField;
+	
+	
+	
+	public static String currentReplacementKey;
+	
+	public static Runnable currentReplacementOperation;
+	
+	public static String currentReplacementValue;
+	
+	public static String currentReplacementField;
 	
 	
 	
@@ -88,6 +115,7 @@ public class Modifier
 	{
 		put("NAME",			"	name:");
 		put("CASTING COST",	"	casting_cost:");
+		put("MANA VALUE",	"	cmc:");
 		put("SUPER TYPE",	"	super_type:");
 		put("TYPE",			"	super_type:");
 		put("SUB TYPE",		"	sub_type:");
@@ -113,6 +141,7 @@ public class Modifier
 	{
 		put("	name:",			"");
 		put("	casting_cost:",	"");
+		put("	cmc:",			"0");
 		put("	super_type:",	"");
 		put("	super_type:",	"");
 		put("	sub_type:",		"");
@@ -132,72 +161,115 @@ public class Modifier
 	
 	
 	
-	public static BiPredicate<String, String> conditionOperationEquals = (a, b) -> a.trim().equals(b.trim()) || a.trim().equals(removeTags(b).trim());
+	public static BooleanSupplier conditionOperationEquals = () -> currentConditionValue.trim().equals(currentConditionField.trim()) || currentConditionValue.trim().equals(removeTags(currentConditionField).trim());
 	
-	public static BiPredicate<String, String> conditionOperationNotEquals = (a, b) -> !conditionOperationEquals.test(a, b);
+	public static BooleanSupplier conditionOperationNotEquals = () -> !conditionOperationEquals.getAsBoolean();
 	
-	public static BiPredicate<String, String> conditionOperationContains = (a, b) -> b.contains(a.trim()) || removeTags(b).contains(a.trim());
+	public static BooleanSupplier conditionOperationContains = () -> currentConditionField.contains(currentConditionValue.trim()) || removeTags(currentConditionField).contains(currentConditionValue.trim());
 	
-	public static BiPredicate<String, String> conditionOperationNotContains = (a, b) -> !conditionOperationContains.test(a, b);
+	public static BooleanSupplier conditionOperationNotContains = () -> !conditionOperationContains.getAsBoolean();
 	
-	public static BiPredicate<String, String> conditionOperationNumberGreater = (a, b) -> b.equals("") ? false : parseInt(a).intValue() < parseInt(b).intValue();
+	public static BooleanSupplier conditionOperationNumberGreater = () -> currentConditionField.equals("") ? false : parseInt(currentConditionValue).intValue() < parseInt(currentConditionField).intValue();
 	
-	public static BiPredicate<String, String> conditionOperationNumberSmaller = (a, b) -> b.equals("") ? false : parseInt(a).intValue() > parseInt(b).intValue();
+	public static BooleanSupplier conditionOperationNumberSmaller = () -> currentConditionField.equals("") ? false : parseInt(currentConditionValue).intValue() > parseInt(currentConditionField).intValue();
 	
-	public static BiPredicate<String, String> conditionOperationColorEquals = (a, b) ->
+	public static BooleanSupplier conditionOperationColorEquals = () ->
 	{
 		
-		String[] rgbAsked = a.trim().replace("rgb", "").replace("(", "").replace(")", "").split(" *[.,:;] *");
+		String[] splitValue = currentConditionValue.trim().replace("rgb", "").replace("(", "").replace(")", "").split(" *[.,:;] *");
 		
-		String[] rgbFound = a.trim().replace("rgb", "").replace("(", "").replace(")", "").split(" *[.,:;] *");
+		String[] splitField = currentConditionField.trim().replace("rgb", "").replace("(", "").replace(")", "").split(" *[.,:;] *");
 		
-		return conditionOperationEquals.test(rgbAsked[0], rgbFound[0]) && conditionOperationEquals.test(rgbAsked[1], rgbFound[1]) && conditionOperationEquals.test(rgbAsked[2], rgbFound[2]);
+		return splitValue[0].equals(splitField[0]) && splitValue[1].equals(splitField[1]) && splitValue[2].equals(splitField[2]);
 		
 	};
 	
-	public static BiPredicate<String, String> conditionOperationColorNotEquals = (a, b) -> !conditionOperationColorEquals.test(a, b);
+	public static BooleanSupplier conditionOperationColorNotEquals = () -> !conditionOperationColorEquals.getAsBoolean();
 	
-	public static BiPredicate<String, String> conditionOperationColorWordEquals = (a, b) -> conditionOperationColorEquals.test(colorWordsMap.get(a.replaceAll("^is ", "")), b);
+	public static BooleanSupplier conditionOperationColorWordEquals = () ->
+	{
+		
+		currentConditionValue = colorWordsMap.get(currentConditionValue.replaceAll("^is ", ""));
+		
+		return conditionOperationColorEquals.getAsBoolean();
+		
+	};
 	
-	public static BiPredicate<String, String> conditionOperationTypeEquals = (a, b) ->
+	public static BooleanSupplier conditionOperationTypeEquals = () ->
 	{
 		
 		for (int i = 0; i < superTypeList.size(); i++)
 		{
 			
-			b = b.replace(superTypeList.get(i), "");
+			currentConditionField = currentConditionField.replace(superTypeList.get(i), "");
 			
 		}
 		
-		b = removeTags(b).trim().replace("  ", " ");
+		currentConditionField = removeTags(currentConditionField).trim().replace("  ", " ");
 		
-		return a.trim().equals(b);
+		return currentConditionValue.trim().equals(currentConditionField);
 		
 	};
 	
-	public static BiPredicate<String, String> conditionOperationTypeNotEquals = (a, b) -> !conditionOperationTypeEquals.test(a, b);
+	public static BooleanSupplier conditionOperationTypeNotEquals = () -> !conditionOperationTypeEquals.getAsBoolean();
 	
-	public static BiPredicate<String, String> conditionOperationSuperTypeEquals = (a, b) ->
+	public static BooleanSupplier conditionOperationSuperTypeEquals = () ->
 	{
 		
 		for (int i = 0; i < typeList.size(); i++)
 		{
 			
-			b = b.replace(typeList.get(i), "");
+			currentConditionField = currentConditionField.replace(typeList.get(i), "");
 			
 		}
 		
-		b = removeTags(b).trim().replace("  ", " ");
+		currentConditionField = removeTags(currentConditionField).trim().replace("  ", " ");
 		
-		return a.trim().equals(b);
+		return currentConditionValue.trim().equals(currentConditionField);
 		
 	};
 	
-	public static BiPredicate<String, String> conditionOperationSuperTypeNotEquals = (a, b) -> !conditionOperationSuperTypeEquals.test(a, b);
+	public static BooleanSupplier conditionOperationSuperTypeNotEquals = () -> !conditionOperationSuperTypeEquals.getAsBoolean();
 	
-	public static BiPredicate<String, String> conditionOperationTemplateEquals = (a, b) -> a.replaceAll("^magic-", "").replaceAll("\\.mse-style$", "").toLowerCase().equals(b);
+	public static BooleanSupplier conditionOperationTemplateEquals = () -> currentConditionValue.replaceAll("^magic-", "").replaceAll("\\.mse-style$", "").toLowerCase().equals(currentConditionField);
 	
-	public static BiPredicate<String, String> conditionOperationOtherEquals = (a, b) -> conditionOperationEquals.test(a.replaceAll("^is ", ""), b);
+	public static BooleanSupplier conditionOperationManaValueEquals = () ->
+	{
+		
+		String manaValue = String.valueOf(Math.round(getManaValue(currentCard)));
+		
+		return currentConditionValue.equals(manaValue);
+		
+	};
+	
+	public static BooleanSupplier conditionOperationManaValueNotEquals = () -> !conditionOperationManaValueEquals.getAsBoolean();
+	
+	public static BooleanSupplier conditionOperationManaValueGreater = () ->
+	{
+		
+		int manaValue = (int)Math.round(getManaValue(currentCard));
+		
+		return parseInt(currentConditionValue).intValue() < manaValue;
+		
+	};
+	
+	public static BooleanSupplier conditionOperationManaValueSmaller = () ->
+	{
+		
+		int manaValue = (int)Math.round(getManaValue(currentCard));
+		
+		return parseInt(currentConditionValue).intValue() > manaValue;
+		
+	};
+	
+	public static BooleanSupplier conditionOperationOtherEquals = () ->
+	{
+		
+		currentConditionValue = currentConditionValue.replaceAll("^is ", "");
+		
+		return conditionOperationEquals.getAsBoolean();
+		
+	};
 	
 	public static List<String> defaultTextConditionOptions = new ArrayList<String>(Arrays.asList(
 		"is the following :",
@@ -219,6 +291,12 @@ public class Modifier
 	{
 		put("If the card's NAME", defaultTextConditionOptions);
 		put("If the card's CASTING COST", defaultTextConditionOptions);
+		put("If the card's MANA VALUE", new ArrayList<String>(Arrays.asList(
+			"is the following : ",						//These end with spaces to distiguish them from defaultNumberConditionOptions
+			"is not the following : ",					//These end with spaces to distiguish them from defaultNumberConditionOptions
+			"is greater than the following number : ",	//These end with spaces to distiguish them from defaultNumberConditionOptions
+			"is smaller than the following number : "	//These end with spaces to distiguish them from defaultNumberConditionOptions
+		)));
 		put("If the card's SUPER TYPE", new ArrayList<String>(Arrays.asList(
 			"is the following super type :",
 			"is not the following super type :",
@@ -393,7 +471,7 @@ public class Modifier
 		)));
 		put("If the card's ARTIST", defaultTextConditionOptions);
 		put("If the card's TEMPLATE", new ArrayList<String>(Arrays.asList(
-			"is the following template :"
+			"is the following (folder name) :"
 		)));
 		put("If the card's BORDER", new ArrayList<String>(Arrays.asList(
 			"is black",
@@ -419,7 +497,7 @@ public class Modifier
 		}
 	}};
 	
-	public static Map<String, BiPredicate<String, String>> conditionOptionsMap = new LinkedHashMap<String, BiPredicate<String, String>>() 
+	public static Map<String, BooleanSupplier> conditionOptionsMap = new LinkedHashMap<String, BooleanSupplier>() 
 	{
 		private static final long serialVersionUID = 1L;
 	{
@@ -429,6 +507,10 @@ public class Modifier
 		put("does not contain the following :", conditionOperationNotContains);
 		put("is greater than the following number :", conditionOperationNumberGreater);
 		put("is smaller than the following number :", conditionOperationNumberSmaller);
+		put("is the following : ", conditionOperationManaValueEquals);						//These end with spaces to distiguish them from defaultNumberConditionOptions
+		put("is not the following : ", conditionOperationManaValueNotEquals);				//These end with spaces to distiguish them from defaultNumberConditionOptions
+		put("is greater than the following number : ", conditionOperationManaValueGreater);	//These end with spaces to distiguish them from defaultNumberConditionOptions
+		put("is smaller than the following number : ", conditionOperationManaValueSmaller);	//These end with spaces to distiguish them from defaultNumberConditionOptions
 		put("is black", conditionOperationColorWordEquals);
 		put("is white", conditionOperationColorWordEquals);
 		put("is grey", conditionOperationColorWordEquals);
@@ -437,67 +519,85 @@ public class Modifier
 		put("is not the following type :", conditionOperationTypeNotEquals);
 		put("is the following super type :", conditionOperationSuperTypeEquals);
 		put("is not the following super type :", conditionOperationSuperTypeNotEquals);
-		put("is the following template :", conditionOperationTemplateEquals);
+		put("is the following (folder name) :", conditionOperationTemplateEquals);
 		put("is the following R;G;B color :", conditionOperationColorEquals);
 		put("is not the following R;G;B color :", conditionOperationColorNotEquals);
 	}};
 	
 	
 
-	public static BiFunction<String, String, String> replacementOperationReplace = (a, b) -> a;
-	
-	public static BiFunction<String, String, String> replacementOperationAppend = (a, b) -> b + a;
-	
-	public static BiFunction<String, String, String> replacementOperationPrepend = (a, b) -> a + b;
-	
-	public static BiFunction<String, String, String> replacementOperationRemove = (a, b) -> b.replace(a, "").replace("  ", " ");
-	
-	public static BiFunction<String, String, String> replacementOperationNumberAdd = (a, b) -> String.valueOf(parseInt(b).intValue() + parseInt(a).intValue());
-	
-	public static BiFunction<String, String, String> replacementOperationNumberSubtract = (a, b) -> String.valueOf(parseInt(b).intValue() - parseInt(a).intValue());
-	
-	public static BiFunction<String, String, String> replacementOperationColorReplace = (a, b) ->
+	public static Runnable replacementOperationDeleteCard = () ->
 	{
 		
-		String[] rgbAsked = a.trim().replace("rgb", "").replace("(", "").replace(")", "").split(" *[.,:;] *");
+		cards.remove(currentCardIndex);
 		
-		return "rgb(" + rgbAsked[0] + "," + rgbAsked[1] + "," + rgbAsked[2] + ")";
+		currentCardIndex--;
 		
 	};
 	
-	public static BiFunction<String, String, String> replacementOperationColorWordReplace = (a, b) -> colorWordsMap.get(a.replaceAll("^to ", ""));
+	public static Runnable replacementOperationReplace = () -> addField(currentCard, currentReplacementKey, currentReplacementValue);
 	
-	public static BiFunction<String, String, String> replacementOperationSuperTypeReplace = (a, b) ->
+	public static Runnable replacementOperationAppend = () -> addField(currentCard, currentReplacementKey, currentReplacementField + currentReplacementValue);
+	
+	public static Runnable replacementOperationPrepend = () -> addField(currentCard, currentReplacementKey, currentReplacementValue + currentReplacementField);
+	
+	public static Runnable replacementOperationRemove = () -> addField(currentCard, currentReplacementKey, currentReplacementField.replace(currentReplacementValue, "").replace("  ", " "));
+	
+	public static Runnable replacementOperationNumberAdd = () -> addField(currentCard, currentReplacementKey, String.valueOf(parseInt(currentReplacementField).intValue() + parseInt(currentReplacementValue).intValue()));
+	
+	public static Runnable replacementOperationNumberSubtract = () -> addField(currentCard, currentReplacementKey, String.valueOf(parseInt(currentReplacementField).intValue() - parseInt(currentReplacementValue).intValue()));
+	
+	public static Runnable replacementOperationColorReplace = () ->
+	{
+		
+		String[] splitValue = currentReplacementValue.trim().replace("rgb", "").replace("(", "").replace(")", "").split(" *[.,:;] *");
+		
+		String cleanedValue = "rgb(" + splitValue[0] + "," + splitValue[1] + "," + splitValue[2] + ")";
+		
+		addField(currentCard, currentReplacementKey, cleanedValue);
+		
+	};
+	
+	public static Runnable replacementOperationColorWordReplace = () -> addField(currentCard, currentReplacementKey, colorWordsMap.get(currentReplacementValue.replaceAll("^to ", "")));
+	
+	public static Runnable replacementOperationSuperTypeReplace = () ->
 	{
 		
 		for (int i = 0; i < superTypeList.size(); i++)
 		{
 			
-			b = b.replace(superTypeList.get(i), "");
+			currentReplacementField = currentReplacementField.replace(superTypeList.get(i), "");
 			
 		}
 		
-		return a + " " + removeTags(b).trim().replace("  ", " ");
+		addField(currentCard, currentReplacementKey, currentReplacementValue + " " + removeTags(currentReplacementField).trim().replace("  ", " "));
 		
 	};
 	
-	public static BiFunction<String, String, String> replacementOperationTypeReplace = (a, b) ->
+	public static Runnable replacementOperationTypeReplace = () ->
 	{
 		
 		for (int i = 0; i < typeList.size(); i++)
 		{
 			
-			b = b.replace(typeList.get(i), "");
+			currentReplacementField = currentReplacementField.replace(typeList.get(i), "");
 			
 		}
 		
-		return removeTags(b).trim().replace("  ", " ") + " " + a;
+		addField(currentCard, currentReplacementKey, removeTags(currentReplacementField).trim().replace("  ", " ") + " " + currentReplacementValue);
 		
 	};
 	
-	public static BiFunction<String, String, String> replacementOperationTemplateReplace = (a, b) -> a.replaceAll("^magic-", "").replaceAll("\\.mse-style$", "").toLowerCase();
+	public static Runnable replacementOperationTemplateReplace = () ->
+	{
+		
+		deleteField(currentCard, "	stylesheet_version:");
+		
+		addField(currentCard, currentReplacementKey, currentReplacementValue.replaceAll("^magic-", "").replaceAll("\\.mse-style$", "").toLowerCase());
+		
+	};
 	
-	public static BiFunction<String, String, String> replacementOperationOtherReplace = (a, b) -> a.replaceAll("^to ", "");
+	public static Runnable replacementOperationOtherReplace = () -> addField(currentCard, currentReplacementKey, currentReplacementValue.replaceAll("^to ", ""));
 	
 	public static List<String> defaultTextReplacementOptions = new ArrayList<String>(Arrays.asList(
 		"to be the following :",
@@ -690,7 +790,7 @@ public class Modifier
 		)));
 		put("Change the card's ARTIST", defaultTextReplacementOptions);
 		put("Change the card's TEMPLATE", new ArrayList<String>(Arrays.asList(
-			"to the following template :"
+			"to the following (folder name) :"
 		)));
 		put("Change the card's BORDER", new ArrayList<String>(Arrays.asList(
 			"to black",
@@ -703,10 +803,11 @@ public class Modifier
 		put("Delete the card", new ArrayList<String>());
 	}};
 	
-	public static  Map<String, BiFunction<String, String, String>> replacementOptionsMap = new LinkedHashMap<String, BiFunction<String, String, String>>() 
+	public static  Map<String, Runnable> replacementOptionsMap = new LinkedHashMap<String, Runnable>() 
 	{
 		private static final long serialVersionUID = 1L;
 	{
+		put("Delete the card", replacementOperationDeleteCard);
 		put("to be the following :", replacementOperationReplace);
 		put("by prepending the following :", replacementOperationPrepend);
 		put("by appending the following :", replacementOperationAppend);
@@ -719,7 +820,7 @@ public class Modifier
 		put("to gold", replacementOperationColorWordReplace);
 		put("to be the following super type :", replacementOperationSuperTypeReplace);
 		put("to be the following type :", replacementOperationTypeReplace);
-		put("to the following template :", replacementOperationTemplateReplace);
+		put("to the following (folder name) :", replacementOperationTemplateReplace);
 		put("to the following R;G;B color :", replacementOperationColorReplace);
 	}};
 	
@@ -833,7 +934,9 @@ public class Modifier
 		
 		List<String> conditionKeys = new ArrayList<String>(conditionCount);
 		
-		List<BiPredicate<String, String>> conditionOperations = new ArrayList<BiPredicate<String, String>>(conditionCount);
+		List<BooleanSupplier> conditionOperations = new ArrayList<BooleanSupplier>(conditionCount);
+		
+		List<String> conditionValues = new ArrayList<String>(conditionCount);
 		
 		for (int k = 0; k < conditionCount; k++)
 		{
@@ -846,53 +949,60 @@ public class Modifier
 			
 			
 			
-			BiPredicate<String, String> conditionOperation = conditionOptionsMap.get(conditionOperationStrings.get(k));
+			BooleanSupplier conditionOperation = conditionOptionsMap.get(conditionOperationStrings.get(k));
 			
 			if (conditionOperation == null)
 			{
 				
 				System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Could not find condition operation ' " + conditionOperationStrings.get(k) + " '.");
 				
-				conditionValueStrings.set(k, conditionOperationStrings.get(k));
+				conditionOperations.add(conditionOperationOtherEquals);
 				
-				conditionOperation = conditionOperationOtherEquals;
+				conditionValues.add(conditionOperationStrings.get(k));
 				
 			}
 			
-			conditionOperations.add(conditionOperation);
-			
+			else
+			{
+				
+				conditionOperations.add(null);
+				
+				conditionValues.add(conditionValueStrings.get(k));
+				
+			}
 		}
 		
 		
 		
 		//Parse replacement key and operation
-		boolean mustDelete = replacementKeyString.equals("Delete the card.");
+		currentReplacementKey = null;
 		
-		String replacementKey = null;
+		currentReplacementKey = keyMap.get(replacementKeyString.replace("Change the card's ", ""));
 		
-		BiFunction<String, String, String> replacementOperation = null;
+		if (currentReplacementKey == null) System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Could not find replacement key ' " + replacementKeyString.replace("Change the card's ", "") + " '.");
 		
-		if (!mustDelete)
+		
+		
+		currentReplacementOperation = null;
+		
+		currentReplacementOperation = replacementOptionsMap.get(replacementKeyString);
+		
+		if (currentReplacementOperation == null) currentReplacementOperation = replacementOptionsMap.get(replacementOperationString);
+		
+		if (currentReplacementOperation == null)
 		{
 			
-			replacementKey = keyMap.get(replacementKeyString.replace("Change the card's ", ""));
+			System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Could not find replacement operation ' " + replacementOperationString + " '.");
 			
-			if (replacementKey == null) System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Could not find replacement key ' " + replacementKeyString.replace("Change the card's ", "") + " '.");
+			currentReplacementValue = replacementOperationString;
 			
-			replacementOperation = replacementOptionsMap.get(replacementOperationString);
+			currentReplacementOperation = replacementOperationOtherReplace;
 			
-			if (replacementOperation == null)
-			{
-				
-				System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Could not find replacement operation ' " + replacementOperationString + " '.");
-				
-				replacementValueString = replacementOperationString;
-				
-				replacementOperation = replacementOperationOtherReplace;
-				
-			}
 		}
 		
+		
+		
+		currentReplacementValue = replacementValueString;
 		
 		
 		
@@ -902,10 +1012,10 @@ public class Modifier
 		int cardModifiedCount = 0;
 		
 		cardLoop:
-		for (int i = 0; i < cards.size(); i++)
+		for (currentCardIndex = 0; currentCardIndex < cards.size(); currentCardIndex++)
 		{
 			
-			List<String> card = cards.get(i);
+			currentCard = cards.get(currentCardIndex);
 			
 			
 			
@@ -913,19 +1023,20 @@ public class Modifier
 			for (int k = 0; k < conditionCount; k++)
 			{
 				
-				String conditionKey = conditionKeys.get(k);
+				currentConditionKey = conditionKeys.get(k);
 				
-				BiPredicate<String, String> conditionOperation = conditionOperations.get(k);
+				currentConditionOperation = conditionOperations.get(k);
 				
-				String conditionValueString = conditionValueStrings.get(k);
+				currentConditionValue = conditionValues.get(k);
 				
-				String conditionField = getFieldValue(card, conditionKey);
+				currentConditionField = getFieldValue(currentCard, currentConditionKey);
 				
 				
-				System.out.println(conditionValueString);
-				System.out.println(conditionField);
+				
+				System.out.println(currentConditionValue);
+				System.out.println(currentConditionField);
 				System.out.println();
-				if (!conditionOperation.test(conditionValueString, conditionField)) continue cardLoop;
+				if (!currentConditionOperation.getAsBoolean()) continue cardLoop;
 				
 			}
 			
@@ -934,44 +1045,12 @@ public class Modifier
 			//Modify the card
 			cardModifiedCount++;
 			
-			if (mustDelete)
-			{
-				
-				cards.remove(i);
-				
-				i--;
-				
-			}
+			currentReplacementField = getFieldValue(currentCard, currentReplacementKey);
 			
-			else
-			{
-				
-				int replacementIndex = getFieldIndex(card, replacementKey);
-				
-				
-				
-				String replacementField = replacementIndex == -1 ? defaultMap.get(replacementKey) : getFieldValue(card, replacementIndex, replacementKey);
-				
-				replacementField = replacementOperation.apply(replacementValueString, replacementField);
-				
-				
-				
-				if (replacementIndex == -1)
-				{
-					
-					 addField(card, replacementKey, replacementField);
-					
-				}
-				
-				else
-				{
-					
-					deleteField(card, replacementIndex, replacementKey);
-					
-					addField(card, replacementKey, replacementField);
-					
-				}
-			}
+			deleteField(currentCard, currentReplacementKey);
+			
+			currentReplacementOperation.run();
+			
 		}
 		
 		
@@ -979,7 +1058,7 @@ public class Modifier
 		//Log results
 		String cardCountString = cardCount + " card" + (cardCount != 1 ? "s" : "") + " found, ";
 		
-		String cardModifiedCountString = cardModifiedCount + " card" + (cardModifiedCount != 1 ? "s" : "") + (mustDelete ? " deleted." : " modified.");
+		String cardModifiedCountString = cardModifiedCount + " card" + (cardModifiedCount != 1 ? "s" : "") + (replacementKeyString.equals("Delete the card") ? " deleted." : " modified.");
 		
 		log(cardCountString + cardModifiedCountString, Color.black, "logic");
 		
@@ -1018,12 +1097,17 @@ public class Modifier
 	
 	
 	
-	public static String getFieldValue(List<String> card, int row, String key)
+	public static String getFieldValue(List<String> card, String key)
 	{
 		
-		if (!key.startsWith("	")) key = "	" + key;
+		int row = getFieldIndex(card, key);
 		
-		if (!key.endsWith(":")) key = key + ":";
+		if (row == -1)
+		{
+			
+			return defaultMap.get(key);
+			
+		}
 		
 		String value = card.get(row).replace(key, "").replaceAll("^ ", "");
 		
@@ -1051,22 +1135,6 @@ public class Modifier
 		
 	}
 	
-	public static String getFieldValue(List<String> card, String key)
-	{
-		
-		int index = getFieldIndex(card, key);
-		
-		if (index == -1)
-		{
-			
-			return defaultMap.get(key);
-			
-		}
-		
-		else return getFieldValue(card, index, key);
-		
-	}
-	
 	
 	
 	public static void addField(List<String> card, String key, String value)
@@ -1086,17 +1154,12 @@ public class Modifier
 	
 	
 	
-	public static void deleteField(List<String> card, int row, String key)
+	public static void deleteField(List<String> card, String key)
 	{
 		
-		if (!card.get(row).startsWith(key))
-		{
-			
-			System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Trying to delete field at the wrong line.");
-			
-			return;
-			
-		}
+		int row = getFieldIndex(card, key);
+		
+		if (row == -1) return;
 		
 		card.remove(row);
 		
@@ -1106,6 +1169,108 @@ public class Modifier
 			card.remove(row);
 			
 		}
+	}
+	
+	
+	
+	public static double getManaValue(List<String> card)
+	{
+		
+		String manaCost = removeTags(getFieldValue(card, "	casting_cost:"));
+		
+		double manaValue = 0;
+		
+		
+		
+		manaCost = manaCost.replaceAll("(TK|E)/(?![0-9])", "");
+		
+		manaCost = manaCost.replaceAll("(?<![0-9])/(TK|E)", "");
+		
+		manaCost = manaCost.replaceAll("(?<!/)(TK|E)(?!/)", "");
+		
+		
+		
+		int length = manaCost.length();
+		
+		manaCost = manaCost.replace("1/2", "");
+		
+		if (length != manaCost.length()) manaValue += 0.5d;
+		
+		
+		
+		Matcher halfManaMatcher = Pattern.compile("\\|[WUBRGCVLHSEA]").matcher(manaCost);
+		
+		while (halfManaMatcher.find())
+		{
+			
+			manaValue += 0.5;
+			
+		}
+		
+		manaCost = manaCost.replaceAll("\\|[WUBRGCVLHSEA]", "");
+		
+		
+		
+		Matcher numberHybridManaMatcher = Pattern.compile("([0-9])(/[WUBRGCVLHSEA]){1,4}").matcher(manaCost);
+		
+		while (numberHybridManaMatcher.find())
+		{
+			
+			try
+			{
+				
+				manaValue += Integer.parseInt(numberHybridManaMatcher.group(1));
+				
+			} catch (Exception e) {}
+		}
+		
+		manaCost = manaCost.replaceAll("([0-9])(/[WUBRGCVLHSEA]){1,4}", "");
+		
+		
+		
+		Matcher colorManaMatcher = Pattern.compile("([WUBRGCVLHSEA])(/[WUBRGCVLHSEA]){0,4}").matcher(manaCost);
+		
+		while (colorManaMatcher.find())
+		{
+			
+			manaValue++;
+			
+		}
+		
+		manaCost = manaCost.replaceAll("([WUBRGCVLHSEA])(/[WUBRGCVLHSEA]){0,4}", "");
+		
+		
+		
+		Matcher numberManaMatcher = Pattern.compile("[0-9]+").matcher(manaCost);
+		
+		while (numberManaMatcher.find())
+		{
+			
+			try
+			{
+				
+				manaValue += Integer.parseInt(numberManaMatcher.group(0));
+				
+			} catch (Exception e) {}
+		}
+		
+		
+		
+		return manaValue;
+		
+	}
+	
+	public static String formatKey(String key)
+	{
+		
+		key = key.replace(" ", "_").toLowerCase();
+		
+		if (!key.startsWith("	")) key = "	" + key;
+		
+		if (!key.endsWith(":")) key = key + ":";
+		
+		return key;
+		
 	}
 	
 	
