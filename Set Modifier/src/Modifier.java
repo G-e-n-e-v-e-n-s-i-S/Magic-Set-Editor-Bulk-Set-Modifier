@@ -1298,68 +1298,6 @@ public class Modifier
 		
 	}
 	
-	public static String formatKey(String key)
-	{
-		
-		key = key.replace(" ", "_").toLowerCase();
-		
-		if (!key.startsWith("	")) key = "	" + key;
-		
-		if (!key.endsWith(":")) key = key + ":";
-		
-		return key;
-		
-	}
-	
-	
-	
-	//public static int deleteCard(List<String> setFile, int row)
-	//{
-	//	
-	//	int deletedLinesCount = 0;
-	//	
-	//	while (row < setFile.size() && setFile.get(row).startsWith("	"))
-	//	{
-	//		
-	//		setFile.remove(row);
-	//		
-	//		deletedLinesCount++;
-	//		
-	//	}
-	//	
-	//	if (row > 0)
-	//	{
-	//		
-	//		while (setFile.get(row-1).startsWith("	"))
-	//		{
-	//			
-	//			setFile.remove(row-1);
-	//			
-	//			deletedLinesCount++;
-	//			
-	//		}
-	//		
-	//		if (!setFile.get(row-1).startsWith("card:"))
-	//		{
-	//			
-	//			log("Error while deleting card.", Color.red, "logic");
-	//			
-	//		}
-	//		
-	//		else
-	//		{
-	//			
-	//			setFile.remove(row-1);
-	//			
-	//			deletedLinesCount++;
-	//			
-	//		}
-	//	}
-	//	
-	//	return deletedLinesCount;
-	//	
-	//}
-	
 	
 	
 	public static String removeTags(String string)
