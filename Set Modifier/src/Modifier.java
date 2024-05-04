@@ -1,5 +1,7 @@
 import java.awt.Color;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -1453,8 +1455,20 @@ public class Modifier
 				
 				Path setPath = fileSystem.getPath("/set");
 				
-				Files.write(setPath, setLines, StandardCharsets.UTF_8);
-				
+				try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(setPath), StandardCharsets.UTF_8)))
+				{
+					
+					for (int i = 0; i < setLines.size(); i++)
+					{
+						
+						String line = setLines.get(i);
+						
+						writer.write(line);
+						
+						writer.newLine();
+						
+					}
+				}
 			}
 			
 			log("Set file saved.", Color.black, "save");
