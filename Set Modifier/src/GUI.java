@@ -886,23 +886,23 @@ public class GUI
 	
 	
 	
-	public static void logStackTrace(Exception e)
+	public static void logExceptionStackTrace(Exception exception)
 	{
 		
 		StringWriter stringWriter = new StringWriter();
 		
 		PrintWriter printWriter = new PrintWriter(stringWriter);
 		
-		e.printStackTrace(printWriter);
+		exception.printStackTrace(printWriter);
 		
-		String sStackTrace = stringWriter.toString(); 
+		String stringStackTrace = stringWriter.toString(); 
 		
 		try
 		{
 			
-			Files.write(Paths.get(System.getProperty("user.home"), "Desktop", "StackTrace.txt"), sStackTrace.getBytes());
+			Files.write(Paths.get(System.getProperty("user.home"), "Desktop", "StackTrace.txt"), stringStackTrace.getBytes());
 			
-		} catch (IOException e1)
+		} catch (IOException e)
 		{
 			
 			System.out.println(new Date().toString().substring(11, 20) + " ERROR:   Could not log stack trace.");
