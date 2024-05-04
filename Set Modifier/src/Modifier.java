@@ -272,14 +272,14 @@ public class Modifier
 	};
 	
 	public static List<String> defaultTextConditionOptions = new ArrayList<String>(Arrays.asList(
-		"is the following :",
+		"is exactly the following :",
 		"is not the following :",
 		"contains the following :",
 		"does not contain the following :"
 	));
 	
 	public static List<String> defaultNumberConditionOptions = new ArrayList<String>(Arrays.asList(
-		"is the following :",
+		"is exactly the following :",
 		"is not the following :",
 		"is greater than the following number :",
 		"is smaller than the following number :"
@@ -292,19 +292,19 @@ public class Modifier
 		put("If the card's NAME", defaultTextConditionOptions);
 		put("If the card's CASTING COST", defaultTextConditionOptions);
 		put("If the card's MANA VALUE", new ArrayList<String>(Arrays.asList(
-			"is the following : ",						//These end with spaces to distiguish them from defaultNumberConditionOptions
+			"is exactly the following : ",				//These end with spaces to distiguish them from defaultNumberConditionOptions
 			"is not the following : ",					//These end with spaces to distiguish them from defaultNumberConditionOptions
 			"is greater than the following number : ",	//These end with spaces to distiguish them from defaultNumberConditionOptions
 			"is smaller than the following number : "	//These end with spaces to distiguish them from defaultNumberConditionOptions
 		)));
 		put("If the card's SUPER TYPE", new ArrayList<String>(Arrays.asList(
-			"is the following super type :",
+			"is exactly the following super type :",
 			"is not the following super type :",
 			"contains the following :",
 			"does not contain the following :"
 		)));
 		put("If the card's TYPE", new ArrayList<String>(Arrays.asList(
-			"is the following type :",
+			"is exactly the following type :",
 			"is not the following type :",
 			"contains the following :",
 			"does not contain the following :"
@@ -471,14 +471,14 @@ public class Modifier
 		)));
 		put("If the card's ARTIST", defaultTextConditionOptions);
 		put("If the card's TEMPLATE", new ArrayList<String>(Arrays.asList(
-			"is the following (folder name) :"
+			"is exactly the following (folder name) :"
 		)));
 		put("If the card's BORDER", new ArrayList<String>(Arrays.asList(
 			"is black",
 			"is white",
 			"is grey",
 			"is gold",
-			"is the following R;G;B color :",
+			"is exactly the following R;G;B color :",
 			"is not the following R;G;B color :"
 		)));
 		put("If the card's NOTES", defaultTextConditionOptions);
@@ -501,13 +501,13 @@ public class Modifier
 	{
 		private static final long serialVersionUID = 1L;
 	{
-		put("is the following :", conditionOperationEquals);
+		put("is exactly the following :", conditionOperationEquals);
 		put("is not the following :", conditionOperationNotEquals);
 		put("contains the following :", conditionOperationContains);
 		put("does not contain the following :", conditionOperationNotContains);
 		put("is greater than the following number :", conditionOperationNumberGreater);
 		put("is smaller than the following number :", conditionOperationNumberSmaller);
-		put("is the following : ", conditionOperationManaValueEquals);						//These end with spaces to distiguish them from defaultNumberConditionOptions
+		put("is exactly the following : ", conditionOperationManaValueEquals);				//These end with spaces to distiguish them from defaultNumberConditionOptions
 		put("is not the following : ", conditionOperationManaValueNotEquals);				//These end with spaces to distiguish them from defaultNumberConditionOptions
 		put("is greater than the following number : ", conditionOperationManaValueGreater);	//These end with spaces to distiguish them from defaultNumberConditionOptions
 		put("is smaller than the following number : ", conditionOperationManaValueSmaller);	//These end with spaces to distiguish them from defaultNumberConditionOptions
@@ -515,12 +515,12 @@ public class Modifier
 		put("is white", conditionOperationColorWordEquals);
 		put("is grey", conditionOperationColorWordEquals);
 		put("is gold", conditionOperationColorWordEquals);
-		put("is the following type :", conditionOperationTypeEquals);
+		put("is exactly the following type :", conditionOperationTypeEquals);
 		put("is not the following type :", conditionOperationTypeNotEquals);
-		put("is the following super type :", conditionOperationSuperTypeEquals);
+		put("is exactly the following super type :", conditionOperationSuperTypeEquals);
 		put("is not the following super type :", conditionOperationSuperTypeNotEquals);
-		put("is the following (folder name) :", conditionOperationTemplateEquals);
-		put("is the following R;G;B color :", conditionOperationColorEquals);
+		put("is exactly the following (folder name) :", conditionOperationTemplateEquals);
+		put("is exactly the following R;G;B color :", conditionOperationColorEquals);
 		put("is not the following R;G;B color :", conditionOperationColorNotEquals);
 	}};
 	
@@ -543,9 +543,23 @@ public class Modifier
 	
 	public static Runnable replacementOperationRemove = () -> addField(currentCard, currentReplacementKey, currentReplacementField.replace(currentReplacementValue, "").replace("  ", " "));
 	
-	public static Runnable replacementOperationNumberAdd = () -> addField(currentCard, currentReplacementKey, String.valueOf(parseInt(currentReplacementField).intValue() + parseInt(currentReplacementValue).intValue()));
+	public static Runnable replacementOperationNumberAdd = () ->
+	{
+		
+		int fieldValue = currentReplacementField.trim().equals("") ? 0 : parseInt(currentReplacementField).intValue();
+		
+		addField(currentCard, currentReplacementKey, String.valueOf(fieldValue + parseInt(currentReplacementValue).intValue()));
+		
+	};
 	
-	public static Runnable replacementOperationNumberSubtract = () -> addField(currentCard, currentReplacementKey, String.valueOf(parseInt(currentReplacementField).intValue() - parseInt(currentReplacementValue).intValue()));
+	public static Runnable replacementOperationNumberSubtract = () ->
+	{
+		
+		int fieldValue = currentReplacementField.trim().equals("") ? 0 : parseInt(currentReplacementField).intValue();
+		
+		addField(currentCard, currentReplacementKey, String.valueOf(fieldValue - parseInt(currentReplacementValue).intValue()));
+		
+	};
 	
 	public static Runnable replacementOperationColorReplace = () ->
 	{
@@ -834,55 +848,55 @@ public class Modifier
 	
 	
 	
-	public static void main(String[] args) throws Exception
-	{
-		
-		logToConsole = true;
-		
-		
-		
-		String loadPath = System.getProperty("user.home") + "\\Desktop\\SETNAME.mse-set";
-		
-		
-		
-		String conditionCountString = "2";
-		
-		
-		
-		List<String> conditionKeyStrings = new ArrayList<String>(Arrays.asList(
-			"If the card's RARITY",
-			"And if the card's CASTING COST"
-		));
-		
-		List<String> conditionOperationStrings = new ArrayList<String>(Arrays.asList(
-			"is common",
-			"contains the following :"
-		));
-		
-		List<String> conditionValueStrings = new ArrayList<String>(Arrays.asList(
-			"rare",
-			"W"
-		));
-		
-		
-		
-		String replacementKeyString = "Change the card's NAME";
-		
-		String replacementOperationString = "by prepending the following :";
-		
-		String replacementValueString = "A-";
-		
-		
-		
-		modify
-		(
-			loadPath,
-			conditionCountString,
-			conditionKeyStrings, conditionOperationStrings, conditionValueStrings,
-			replacementKeyString, replacementOperationString, replacementValueString
-		);
-		
-	}
+	//public static void main(String[] args) throws Exception
+	//{
+	//	
+	//	logToConsole = true;
+	//	
+	//	
+	//	
+	//	String loadPath = System.getProperty("user.home") + "\\Desktop\\SETNAME.mse-set";
+	//	
+	//	
+	//	
+	//	String conditionCountString = "2";
+	//	
+	//	
+	//	
+	//	List<String> conditionKeyStrings = new ArrayList<String>(Arrays.asList(
+	//		"If the card's BORDER",
+	//		"And if the card's CASTING COST"
+	//	));
+	//	
+	//	List<String> conditionOperationStrings = new ArrayList<String>(Arrays.asList(
+	//		"is black",
+	//		"contains the following :"
+	//	));
+	//	
+	//	List<String> conditionValueStrings = new ArrayList<String>(Arrays.asList(
+	//		"rare",
+	//		"W"
+	//	));
+	//	
+	//	
+	//	
+	//	String replacementKeyString = "Delete the card";
+	//	
+	//	String replacementOperationString = "by prepending the following :";
+	//	
+	//	String replacementValueString = "A-";
+	//	
+	//	
+	//	
+	//	modify
+	//	(
+	//		loadPath,
+	//		conditionCountString,
+	//		conditionKeyStrings, conditionOperationStrings, conditionValueStrings,
+	//		replacementKeyString, replacementOperationString, replacementValueString
+	//	);
+	//	
+	//}
 	
 	
 	
@@ -965,10 +979,21 @@ public class Modifier
 			else
 			{
 				
-				conditionOperations.add(null);
+				conditionOperations.add(conditionOperation);
 				
-				conditionValues.add(conditionValueStrings.get(k));
+				if (conditionOperationStrings.get(k).matches(".*: ?$"))
+				{
+					
+					conditionValues.add(conditionValueStrings.get(k));
+					
+				}
 				
+				else
+				{
+					
+					conditionValues.add(conditionOperationStrings.get(k));
+					
+				}
 			}
 		}
 		
@@ -1002,7 +1027,19 @@ public class Modifier
 		
 		
 		
-		currentReplacementValue = replacementValueString;
+		if (replacementOperationString.matches(".*: ?$"))
+		{
+			
+			currentReplacementValue = replacementValueString;
+			
+		}
+		
+		else
+		{
+			
+			currentReplacementValue = replacementOperationString;
+			
+		}
 		
 		
 		
@@ -1033,9 +1070,6 @@ public class Modifier
 				
 				
 				
-				System.out.println(currentConditionValue);
-				System.out.println(currentConditionField);
-				System.out.println();
 				if (!currentConditionOperation.getAsBoolean()) continue cardLoop;
 				
 			}
@@ -1079,6 +1113,10 @@ public class Modifier
 	
 	public static int getFieldIndex(List<String> card, String key)
 	{
+		
+		if (key == null) return -1;
+		
+		
 		
 		if (!key.startsWith("	")) key = "	" + key;
 		
@@ -1486,7 +1524,7 @@ public class Modifier
 		} catch (Exception e)
 		{
 			
-			log("Unable to save Set file at specified path.", Color.red, "save");
+			log("Unable to save Set file at specified path. (Try closing MSE.)", Color.red, "save");
 			
 			return false;
 			

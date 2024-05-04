@@ -430,7 +430,7 @@ public class Launcher
 				
 				conditionOperationComboBox1.setVisible(true);
 				
-				if (String.valueOf(conditionOperationComboBox1.getSelectedItem()).endsWith(":")) conditionValueTextField1.setVisible(true);
+				if (String.valueOf(conditionOperationComboBox1.getSelectedItem()).matches(".*: ?$")) conditionValueTextField1.setVisible(true);
 				
 				else conditionValueTextField1.setVisible(false);
 				
@@ -463,7 +463,7 @@ public class Launcher
 				
 				conditionOperationComboBox1.setVisible(true);
 				
-				if (String.valueOf(conditionOperationComboBox1.getSelectedItem()).endsWith(":")) conditionValueTextField1.setVisible(true);
+				if (String.valueOf(conditionOperationComboBox1.getSelectedItem()).matches(".*: ?$")) conditionValueTextField1.setVisible(true);
 				
 				else conditionValueTextField1.setVisible(false);
 				
@@ -473,7 +473,7 @@ public class Launcher
 				
 				conditionOperationComboBox2.setVisible(true);
 				
-				if (String.valueOf(conditionOperationComboBox2.getSelectedItem()).endsWith(":")) conditionValueTextField2.setVisible(true);
+				if (String.valueOf(conditionOperationComboBox2.getSelectedItem()).matches(".*: ?$")) conditionValueTextField2.setVisible(true);
 				
 				else conditionValueTextField2.setVisible(false);
 				
@@ -498,7 +498,7 @@ public class Launcher
 				
 				conditionOperationComboBox1.setVisible(true);
 				
-				if (String.valueOf(conditionOperationComboBox1.getSelectedItem()).endsWith(":")) conditionValueTextField1.setVisible(true);
+				if (String.valueOf(conditionOperationComboBox1.getSelectedItem()).matches(".*: ?$")) conditionValueTextField1.setVisible(true);
 				
 				else conditionValueTextField1.setVisible(false);
 				
@@ -508,7 +508,7 @@ public class Launcher
 				
 				conditionOperationComboBox2.setVisible(true);
 				
-				if (String.valueOf(conditionOperationComboBox2.getSelectedItem()).endsWith(":")) conditionValueTextField2.setVisible(true);
+				if (String.valueOf(conditionOperationComboBox2.getSelectedItem()).matches(".*: ?$")) conditionValueTextField2.setVisible(true);
 				
 				else conditionValueTextField2.setVisible(false);
 				
@@ -518,7 +518,7 @@ public class Launcher
 				
 				conditionOperationComboBox3.setVisible(true);
 				
-				if (String.valueOf(conditionOperationComboBox3.getSelectedItem()).endsWith(":")) conditionValueTextField3.setVisible(true);
+				if (String.valueOf(conditionOperationComboBox3.getSelectedItem()).matches(".*: ?$")) conditionValueTextField3.setVisible(true);
 				
 				else conditionValueTextField3.setVisible(false);
 				
@@ -592,7 +592,7 @@ public class Launcher
 				
 				operationString = String.valueOf(operationComboBox.getSelectedItem());
 				
-				valueTextField.setVisible(operationString.endsWith(":"));
+				valueTextField.setVisible(operationString.matches(".*: ?$"));
 				
 			}
 			
@@ -631,7 +631,7 @@ public class Launcher
 			
 			String operationString = String.valueOf(operationComboBox.getSelectedItem());
 			
-			valueTextField.setVisible(operationString.endsWith(":"));
+			valueTextField.setVisible(operationString.matches(".*: ?$"));
 			
 			window.pack();
 			
