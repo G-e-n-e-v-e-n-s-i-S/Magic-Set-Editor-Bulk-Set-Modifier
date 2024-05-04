@@ -13,7 +13,7 @@ For example: if you want to modify all the Creatures with Mana Value 5 or more, 
 For the first, select "If the card's TYPE", "contains the following :" and write "Creature".
 For the second, select "And if the card's MANA VALUE", "is greater than the following number :" and write "4".
 
-If on the other hand you want to modify all the cards in the Set, select 0 conditions.
+If on the other hand you just want to modify all the cards in the Set, select 0 conditions.
 
 Define what modification needs to be applied.
 
